@@ -29,7 +29,7 @@ local math_sqrt = math.sqrt
 local table_create = table.create
 local table_unpack = table.unpack
 
-local Factorial_Cache: {number} = {1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800, 479001600, 6227020800, 87178291200, 1307674368000, 20922789888000, 355687428096000, 6402373705728000}
+local Factorial_Cache: {number} = {[0] = 1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800, 479001600, 6227020800, 87178291200, 1307674368000, 20922789888000, 355687428096000, 6402373705728000}
 local Fibonacci_Cache: {number} = {0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610}
 local Pies = 2 * math_pi
 local Sqrt5 = math_sqrt(5)
@@ -48,13 +48,30 @@ function Module.simplify(func: string): string
 	return "something"
 end
 
-
 -- -- -- Calculus
+
+-- I'm not sure what to put here yet.
+
+
+-- -- -- Combinatorics
+
+--[[
+	Without caching, get a combination.
+
+	This assumes that the numbers are greater than or equal to 0 and less than or equal to 18.  Negative numbers are not acceptable.
+
+	Because factorial numbers quickly pass the limit of the number type, which is a double-precision floating-point value accurate up to only 53 bits (for integers), there is no reason to need to do anything special.
+
+	return: combination
+]]
+function Module.combination(n: number, r: number): number
+	return Factorial_Cache[n] / (Factorial_Cache[r] * Factorial_Cache[n - r])
+end
 
 --[[
 	With caching, get the nth factorial.
 	
-	This assumes that the number is greater than 0 and less than 19.  0! == 1, negative numbers are not acceptable.
+	This assumes that the number is greater than or equal to 0 and less than or equal to 18.  Negative numbers are not acceptable.
 	
 	Because these numbers quickly pass the limit of the number type, which is a double-precision floating-point value accurate up to only 53 bits (for integers), there is no reason to need to do anything special.
 	
@@ -99,6 +116,16 @@ end
 ]]
 function Module.stirlingApproximate(n: number): number
 	return math_sqrt(Pies * n) * (n / math_e) ^ n
+end
+
+
+-- -- -- Complexity
+
+--[[
+	Calculate the complexity of an algorithm written in some sort of pseudocode.
+]]
+function Module.judgePseudocode(pseudoCode: string)
+	-- Yeah.  Will take a bit.  Not doing it right now.
 end
 
 
@@ -196,6 +223,15 @@ function Module.triangle_SignedArea(x1: number, x2: number, x3: number, y1: numb
 	return (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1) / 2
 end
 
+-- -- -- Sets
+
+--[[
+	TODO:
+	- Intersections
+	- Unions
+	- Lots of other things
+]]
+
 
 -- -- -- Statistics
 
@@ -291,6 +327,46 @@ function Module.mode(array: {number}): number
 end
 
 --[[
+	The Welford method for calculating the standard deviation of a list of numbers.
+	
+	This assumes that the list has more than 1 element.  The standard deviation of a list otherwise is 0 at 1 element, or undefined.
+	
+	If the list is a sample, multiply the result by itself, multiply that by the length of the array, divide by one less than the length of the array, and then take the square root of that.
+
+	returns: variance
+]]
+local function standardDeviation_Welford(array: {number}): number
+	return math_sqrt(variance_Welford(array))
+end Module.standardDeviation_Welford = standardDeviation_Welford
+
+--[[
+	Get the standard deviation of a list of numbers.
+
+	This assumes that the list is not a sample and has more than 1 element.  The standard deviation of a list otherwise is 0 at 1 element, or undefined.
+	
+	If the list is a sample, multiply the result by itself, multiply that by the length of the array, divide by one less than the length of the array, and then take the square root of that.
+	
+	returns: standardDeviation
+]]
+function Module.standardDeviation(array: {number}): number
+	return math_sqrt(variance(array))
+end
+
+--[[
+	Get the sum of a list of numbers.
+
+	returns: sum
+]]
+function Module.sum(array: {number}): number
+	local sum = 0
+	for _, value in array do
+		sum += value
+	end
+
+	return sum
+end
+
+--[[
 	Get the variance of a list of numbers.
 	
 	This assumes that the list has more than 1 element.  The sqdiff of a list otherwise is 0 at 1 element, or undefined.
@@ -345,44 +421,10 @@ local function variance_Welford(array: {number}): number
 end Module.variance_Welford = variance_Welford
 
 --[[
-	The Welford method for calculating the standard deviation of a list of numbers.
-	
-	This assumes that the list has more than 1 element.  The standard deviation of a list otherwise is 0 at 1 element, or undefined.
-	
-	If the list is a sample, multiply the result by itself, multiply that by the length of the array, divide by one less than the length of the array, and then take the square root of that.
-
-	returns: variance
+	TODO:
+	- Progression analysis (sigmoid, linear, etc.)
+	- Other kinds of analysis idk lmao
 ]]
-local function standardDeviation_Welford(array: {number}): number
-	return math_sqrt(variance_Welford(array))
-end Module.standardDeviation_Welford = standardDeviation_Welford
-
---[[
-	Get the standard deviation of a list of numbers.
-
-	This assumes that the list is not a sample and has more than 1 element.  The standard deviation of a list otherwise is 0 at 1 element, or undefined.
-	
-	If the list is a sample, multiply the result by itself, multiply that by the length of the array, divide by one less than the length of the array, and then take the square root of that.
-	
-	returns: standardDeviation
-]]
-function Module.standardDeviation(array: {number}): number
-	return math_sqrt(variance(array))
-end
-
---[[
-	Get the sum of a list of numbers.
-
-	returns: sum
-]]
-function Module.sum(array: {number}): number
-	local sum = 0
-	for _, value in array do
-		sum += value
-	end
-
-	return sum
-end
 
 
 -- -- -- Vectors
@@ -390,28 +432,28 @@ end
 --[[
 	returns: crossProduct
 ]]
-function Module.crossProduct(dx1: number, dy1: number, dx2: number, dy2: number): number
+function Module.crossProduct2D(dx1: number, dy1: number, dx2: number, dy2: number): number
 	return dx1 * dy2 - dx2 * dy1
 end
 
 --[[
 	returns: dotProduct
 ]]
-function Module.dotProduct(dx1: number, dy1: number, dx2: number, dy2: number): number
+function Module.dotProduct2D(dx1: number, dy1: number, dx2: number, dy2: number): number
 	return dx1 * dx2 + dy1 * dy2
 end
 
 --[[
 	returns: intersected
 ]]
-function Module.linesIntersect(ax1: number, ay1: number, ax2: number, ay2: number, bx1: number, by1: number, bx2: number, by2: number): boolean
+function Module.linesIntersect2D(ax1: number, ay1: number, ax2: number, ay2: number, bx1: number, by1: number, bx2: number, by2: number): boolean
 	return ((by2 - by1) * (ax2 - ax1)) - ((bx2 - bx1) * (ay2 - ay1)) ~= 0
 end
 
 --[[
 	returns: intersected, x, y
 ]]
-function Module.linesIntersectionPoint(ax1: number, ay1: number, ax2: number, ay2: number, bx1: number, by1: number, bx2: number, by2: number): (boolean, number, number)
+function Module.linesIntersectionPoint2D(ax1: number, ay1: number, ax2: number, ay2: number, bx1: number, by1: number, bx2: number, by2: number): (boolean, number, number)
 	local denominator = ((by2 - by1) * (ax2 - ax1)) - ((bx2 - bx1) * (ay2 - ay1))
 	if denominator == 0 then
 		return false, 0, 0
@@ -425,7 +467,7 @@ end
 --[[
 	returns: intersected, x, y
 ]]
-function Module.lineSegmentsIntersectionPoint(ax1: number, ay1: number, ax2: number, ay2: number, bx1: number, by1: number, bx2: number, by2: number): (boolean, number, number)
+function Module.lineSegmentsIntersectionPoint2D(ax1: number, ay1: number, ax2: number, ay2: number, bx1: number, by1: number, bx2: number, by2: number): (boolean, number, number)
 	local denominator = ((by2 - by1) * (ax2 - ax1)) - ((bx2 - bx1) * (ay2 - ay1))
 	if denominator == 0 then
 		return false, 0, 0
@@ -439,6 +481,12 @@ function Module.lineSegmentsIntersectionPoint(ax1: number, ay1: number, ax2: num
 
 	return true, ax1 + ua * (ax2 - ax1), ay1 + ua * (ay2 - ay1)
 end
+
+--[[
+	TODO:
+	- 3D-vector math
+	- Matrices
+]]
 
 
 -- -- End
